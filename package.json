@@ -1,0 +1,20 @@
+{
+  "name": "sigma",
+  "version": "1.0.0",
+  "description": "Data Indexer",
+  "main": "sigma-cli.js",
+  "preferGlobal": true,
+  "bin": "sigma-cli.js",
+  "author": "Pliffer Technology",
+  "license": "SEE LICENSE IN LICENSE.md",
+  "dependencies": {
+    "crc": "^3.8.0",
+    "fs-extra": "^7.0.1",
+    "get-folder-size": "^2.0.1",
+    "js-sha512": "^0.8.0",
+    "node-ipc": "^9.1.1",
+    "table": "^6.0.7",
+    "walkdir": "^0.4.1",
+    "xlsx": "^0.16.9"
+  }
+}
