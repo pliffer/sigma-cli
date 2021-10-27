@@ -3,9 +3,13 @@ const fs   = require('fs-extra');
 
 let Util = require('./util');
 
+global.util = Util;
+
 module.exports = {
     
     exec(argv){
+        
+        if(argv.length == 0) return console.log('__dirname: ' + __dirname);
         
         if(module.exports.commands[argv[0]]){
             module.exports.commands[argv[0]](argv.slice(1));
@@ -16,31 +20,43 @@ module.exports = {
     commands: {
         
         join(argv){
-            
+
             let cwd = process.cwd();
-            
+
             let column = argv[0];
-            
+
             let filename1 = path.join(cwd, argv[1]);
             let filename2 = path.join(cwd, argv[2]);
             let filename3 = path.join(cwd, argv[3]);
-            
+
             if(!fs.existsSync(filename1)){
                 return console.log(`O arquivo ${filename1} não existe`);
             }
-            
+
             if(!fs.existsSync(filename2)){
                 return console.log(`O arquivo ${filename2} não existe`);
             }
-            
+
             let obj1 = Util.excelToJson(filename1);
             let obj2 = Util.excelToJson(filename2);
-            
+
             let aux = {};
-            
+
+            let columns = [];
+
             obj1.forEach((line, k) => {
-                
-                if(!k) return;
+    
+                if(!k){
+
+                    Object.keys(line).forEach(column => {
+
+                        if(!columns.includes(column)) columns.push(column);
+
+                    });
+
+                    return;
+
+                }
                 
                 if(!aux[line[column]]) aux[line[column]] = [];
                 
@@ -49,9 +65,19 @@ module.exports = {
             });
             
             obj2.forEach((line, k) => {
-                
-                if(!k) return;
-                
+
+                if(!k){
+
+                    Object.keys(line).forEach(column => {
+
+                        if(!columns.includes(column)) columns.push(column);
+
+                    });
+
+                    return;
+
+                }
+
                 if(!aux[line[column]]) aux[line[column]] = [];
                 
                 aux[line[column]].push(line);
@@ -59,7 +85,7 @@ module.exports = {
             });
             
             let final = [];
-            
+
             Object.keys(aux).forEach((key, i) => {
                 
                 let obj = {};
@@ -74,21 +100,76 @@ module.exports = {
                     
                 });
                 
-                if(!i) final.push(Object.keys(obj));
+                if(!i){
+
+                    final.push(columns);
+
+                }
                 
                 let lineArr = [];
 
-                final[0].forEach(column => {
+                columns.forEach(column => {
                     
                     lineArr.push(obj[column]);
 
                 });
-                
+
                 final.push(lineArr);
                 
             });
 
             Util.arrayToXlsx(filename3, final);
+            
+        },
+
+        clear(argv){
+
+            let cwd = process.cwd();
+            
+            let column = argv[0];
+            
+            let filename1 = path.join(cwd, argv[1]);
+            let filename2 = path.join(cwd, argv[2]);
+
+            if(!fs.existsSync(filename1)){
+                return console.log(`O arquivo ${filename1} não existe`);
+            }
+            
+            let obj1 = Util.excelToJson(filename1);
+
+            let aux = [];
+
+            obj1.forEach((line, k) => {
+                
+                if(line[column]) aux.push(line);
+
+            });
+
+            let final = [];
+
+            let columns = Object.keys(aux[0]);
+
+            aux.forEach((line, i) => {
+                
+                if(!i){
+
+                    final.push(columns);
+
+                }
+                
+                let lineArr = [];
+
+                columns.forEach(column => {
+
+                    lineArr.push(line[column]);
+
+                });
+
+                final.push(lineArr);
+                
+            });
+
+            Util.arrayToXlsx(filename2, final);
             
         },
 
@@ -159,7 +240,12 @@ module.exports = {
             break;
             case '.sigma':
 
-                final = module.exports.parseSigma(filename);
+                final = module.exports.parseSigma(filename, argv);
+
+            break;
+            case '.sql':
+
+                final = module.exports.parseSql(filename, argv);
 
             break;
             default:
@@ -170,8 +256,8 @@ module.exports = {
         return final;
 
     },
-   
-    parseSigma(filename){
+
+    parseSigma(filename, argv){
 
         let sigma = require(filename);
 
@@ -210,6 +296,9 @@ module.exports = {
                 });
 
             break;
+            case 'free':
+                return sigma.main(argv);
+            break;
             default:
 
                 console.log(`O tipo ${sigma.type} não foi encontrado`);
@@ -219,6 +308,19 @@ module.exports = {
 
         }
 
-    }
+    },
     
+    parseSql(filename, argv){
+
+        console.log(`@info Parsing .sql file`);
+        console.log(filename);
+
+        let file = fs.readFileSync(filename, 'utf-8');
+
+        console.log(file);
+
+        return Promise.resolve();
+
+    }
+
 }
