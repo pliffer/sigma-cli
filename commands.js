@@ -175,7 +175,11 @@ module.exports = {
 
         parse(argv){
 
-            return module.exports.parseFile(argv).then(table => {
+            let result = module.exports.parseFile(argv);
+
+            if(!result || !result.then) return;
+
+            return result.then(table => {
 
                 if(!table) return console.log("Sem retorno");
 
@@ -297,7 +301,7 @@ module.exports = {
 
             break;
             case 'free':
-                return sigma.main(argv);
+                return sigma.main(argv, Util);
             break;
             default:
 
